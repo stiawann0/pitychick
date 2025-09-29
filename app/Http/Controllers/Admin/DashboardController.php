@@ -8,6 +8,7 @@ use App\Models\Reservation;
 use App\Models\Table;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -49,7 +50,7 @@ class DashboardController extends Controller
         ];
 
         // Monthly reservations di-cache terpisah
-        $monthlyReservations =  $this->getMonthlyReservations();
+        $monthlyReservations = $this->getMonthlyReservations();
 
         return view('admin.dashboard', array_merge($stats, [
             'monthlyReservations' => $monthlyReservations,
@@ -58,10 +59,35 @@ class DashboardController extends Controller
 
     protected function getMonthlyReservations()
     {
-        $result = Reservation::selectRaw('MONTH(reservation_time) as month, COUNT(*) as count')
-            ->whereYear('reservation_time', now()->year)
-            ->groupBy('month')
-            ->pluck('count', 'month');
+        // FIX: Gunakan Carbon/Eloquent untuk database agnostic
+        $monthly = [];
+        
+        for ($i = 1; $i <= 12; $i++) {
+            $count = Reservation::whereYear('reservation_time', now()->year)
+                ->whereMonth('reservation_time', $i)
+                ->count();
+            $monthly[$i] = $count;
+        }
+
+        return $monthly;
+    }
+
+    // Alternative method jika butuh lebih cepat
+    protected function getMonthlyReservationsAlternative()
+    {
+        // Untuk database yang support strftime (SQLite)
+        if (config('database.default') === 'sqlite') {
+            $result = Reservation::selectRaw('strftime("%m", reservation_time) as month, COUNT(*) as count')
+                ->whereRaw('strftime("%Y", reservation_time) = ?', [now()->year])
+                ->groupBy('month')
+                ->pluck('count', 'month');
+        } else {
+            // Untuk MySQL
+            $result = Reservation::selectRaw('MONTH(reservation_time) as month, COUNT(*) as count')
+                ->whereYear('reservation_time', now()->year)
+                ->groupBy('month')
+                ->pluck('count', 'month');
+        }
 
         // Inisialisasi semua bulan agar tetap lengkap
         $monthly = [];
