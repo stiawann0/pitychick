@@ -73,8 +73,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::view('/', 'admin.settings.index')->name('index');
 
         Route::get('/home', [HomeSettingsController::class, 'index'])->name('home');
-        Route::post('/home', [HomeSettingsController::class, 'update'])->name('home.update');
-        Route::put('/home', [HomeSettingsController::class, 'update'])->name('home.update');
+        Route::match(['post', 'put'], '/home', [HomeSettingsController::class, 'update'])->name('home.update');
+
 
         Route::get('/footer', [FooterSettingsController::class, 'index'])->name('footer');
         Route::post('/footer', [FooterSettingsController::class, 'update'])->name('footer.update');
