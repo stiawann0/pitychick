@@ -34,16 +34,16 @@ Route::get('/run-migration', function() {
     return 'Migration & seeding done';
 });
 
-// ✅ TAMBAHKAN INI - Untuk jalankan migration baru saja
+// ✅ TAMBAHKAN INI - Untuk reset database lengkap
+Route::get('/db-reset', function() {
+    Artisan::call('migrate:fresh --seed --force');
+    return 'Database reset complete dengan data fresh!';
+});
+
+// ✅ Untuk jalankan migration baru saja
 Route::get('/add-admin-role', function() {
     Artisan::call('migrate --force');
     return 'Migration untuk role admin berhasil dijalankan!';
-});
-
-// ✅ ATAU INI - Untuk refresh database lengkap
-Route::get('/migrate-fresh-admin', function() {
-    Artisan::call('migrate:fresh --seed --force');
-    return 'Database direset ulang dengan role admin!';
 });
 
 // ✅ Untuk jalankan migration tanpa seeding
