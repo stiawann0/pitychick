@@ -18,7 +18,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 
 // ✅ Public Homepage (redirect ke React frontend)
 Route::get('/', function () {
-    return Redirect::to('welcome'); // Ganti jika di Railway (lihat catatan di bawah)
+    return view('welcome');// Ganti jika di Railway (lihat catatan di bawah)
 })->name('home');
 
 // ✅ Auth routes (register, login)
