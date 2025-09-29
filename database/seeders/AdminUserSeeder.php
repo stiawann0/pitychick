@@ -14,14 +14,12 @@ class AdminUserSeeder extends Seeder
         // Hapus user admin yang sudah ada jika ada
         DB::table('users')->where('email', 'admin@pitychick.com')->delete();
 
-        // Buat user admin baru
+        // Buat user admin baru (HAPUS 'is_admin' dan 'phone' jika tidak ada)
         $admin = User::create([
             'name' => 'Administrator',
             'email' => 'admin@pitychick.com',
             'password' => Hash::make('password123'),
-            'phone' => '081234567890',
-            'role' => User::ROLE_ADMIN,
-            'is_admin' => true,
+            'role' => User::ROLE_ADMIN, // PAKAI INI SAJA
             'email_verified_at' => now(),
         ]);
 
@@ -29,10 +27,10 @@ class AdminUserSeeder extends Seeder
         $this->command->info('Email: admin@pitychick.com');
         $this->command->info('Password: password123');
         
-        // Verifikasi data
+        // Verifikasi data (HAPUS reference ke is_admin)
         $this->command->table(
-            ['ID', 'Name', 'Email', 'Role', 'Is Admin'],
-            [[$admin->id, $admin->name, $admin->email, $admin->role, $admin->is_admin ? 'Yes' : 'No']]
+            ['ID', 'Name', 'Email', 'Role'],
+            [[$admin->id, $admin->name, $admin->email, $admin->role]]
         );
     }
 }
