@@ -34,6 +34,30 @@ Route::get('/run-migration', function() {
     return 'Migration & seeding done';
 });
 
+// ✅ TAMBAHKAN INI - Untuk jalankan migration baru saja
+Route::get('/add-admin-role', function() {
+    Artisan::call('migrate --force');
+    return 'Migration untuk role admin berhasil dijalankan!';
+});
+
+// ✅ ATAU INI - Untuk refresh database lengkap
+Route::get('/migrate-fresh-admin', function() {
+    Artisan::call('migrate:fresh --seed --force');
+    return 'Database direset ulang dengan role admin!';
+});
+
+// ✅ Untuk jalankan migration tanpa seeding
+Route::get('/migrate-only', function() {
+    Artisan::call('migrate --force');
+    return 'Migration berhasil! Sekarang jalankan /seed-only untuk seeding.';
+});
+
+// ✅ Untuk jalankan seeding saja
+Route::get('/seed-only', function() {
+    Artisan::call('db:seed --force');
+    return 'Seeding berhasil!';
+});
+
 Route::get('/run-cache', function() {
     Artisan::call('config:cache');
     Artisan::call('route:cache');
@@ -89,7 +113,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'store'   => 'users.store',
             'show'    => 'users.show',
             'edit'    => 'users.edit',
-            'update'  => 'users.update',
+            'update'   => 'users.update',
             'destroy' => 'users.destroy',
         ]);
 
