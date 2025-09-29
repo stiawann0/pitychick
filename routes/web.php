@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -16,19 +17,42 @@ use App\Http\Controllers\Admin\Settings\GallerySettingsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
-// ✅ Public Homepage (redirect ke React frontend)
+// =============================
+// ✅ Public Homepage
+// =============================
 Route::get('/', function () {
-    return view('welcome');// Ganti jika di Railway (lihat catatan di bawah)
+    return view('welcome'); // Ganti dengan React frontend jika sudah deploy
 })->name('home');
 
+// =============================
+// ✅ Temporary routes untuk Railway (Fix 500 Error)
+// =============================
+// Hanya untuk sekali pakai! Hapus setelah selesai.
+Route::get('/run-migration', function() {
+    Artisan::call('migrate', ["--force"=>true]);
+    Artisan::call('db:seed', ["--force"=>true]);
+    return 'Migration & seeding done';
+});
+
+Route::get('/run-cache', function() {
+    Artisan::call('config:cache');
+    Artisan::call('route:cache');
+    Artisan::call('view:cache');
+    return 'Config, route & view cached';
+});
+
+// =============================
 // ✅ Auth routes (register, login)
+// =============================
 Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
 Route::post('/register', [RegisteredUserController::class, 'store']);
 
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 
+// =============================
 // ✅ Routes dengan Auth + Verifikasi Email
+// =============================
 Route::middleware(['auth', 'verified'])->group(function () {
     
     // ✅ User Profile
@@ -39,7 +63,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ✅ Dashboard umum
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // =============================
     // ✅ Admin Group
+    // =============================
     Route::prefix('admin')->name('admin.')->middleware('can:admin')->group(function () {
 
         // Admin Dashboard
@@ -67,7 +93,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'destroy' => 'users.destroy',
         ]);
 
+        // =============================
         // Settings Group
+        // =============================
         Route::prefix('settings')->name('settings.')->group(function () {
 
             Route::view('/', 'admin.settings.index')->name('index');
@@ -92,5 +120,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-// ✅ Include Auth Scaffolding (from Laravel Breeze/Fortify/etc.)
+// =============================
+// ✅ Include Auth Scaffolding (Breeze/Fortify/etc.)
+// =============================
 require __DIR__.'/auth.php';
