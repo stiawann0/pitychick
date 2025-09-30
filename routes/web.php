@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB; // <- TAMBAHKAN INI
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReservationController;
@@ -16,6 +17,59 @@ use App\Http\Controllers\Admin\Settings\FooterSettingsController;
 use App\Http\Controllers\Admin\Settings\GallerySettingsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+
+// =============================
+// ✅ DATABASE TEST ROUTES - TAMBAHKAN INI
+// =============================
+Route::get('/db-test', function() {
+    try {
+        DB::connection()->getPdo();
+        return response()->json([
+            'status' => 'success', 
+            'message' => '✅ Database connected successfully!',
+            'database' => DB::connection()->getDatabaseName()
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error', 
+            'message' => '❌ Database connection failed: ' . $e->getMessage()
+        ]);
+    }
+});
+
+Route::get('/run-migrate', function() {
+    try {
+        Artisan::call('migrate --force');
+        return response()->json([
+            'status' => 'success', 
+            'message' => '✅ Migration completed successfully!'
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error', 
+            'message' => '❌ Migration failed: ' . $e->getMessage()
+        ]);
+    }
+});
+
+Route::get('/db-status', function() {
+    try {
+        $pdo = DB::connection()->getPdo();
+        $tables = DB::select('SHOW TABLES');
+        
+        return response()->json([
+            'status' => 'success',
+            'database' => DB::connection()->getDatabaseName(),
+            'tables_count' => count($tables),
+            'tables' => $tables
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
 
 // =============================
 // ✅ TEST ROUTES UNTUK RAILWAY (TANPA DATABASE)
