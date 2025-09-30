@@ -9,20 +9,15 @@ use App\Models\Menu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\MidtransService;
 
 class ReservationController extends Controller
 {
-    // ✅ HAPUS middleware constructor, HAPUS Form Request imports
-
-    // Tampilkan daftar reservasi
     public function index()
     {
         $reservations = Reservation::with(['table', 'user', 'menus'])->latest()->paginate(10);
         return view('admin.reservations.index', compact('reservations'));
     }
 
-    // Form buat reservasi baru
     public function create()
     {
         $tables = Table::available()->get();
@@ -30,43 +25,39 @@ class ReservationController extends Controller
         return view('admin.reservations.create', compact('tables', 'menus'));
     }
 
-    // ✅ GUNAKAN Request biasa, bukan Form Request
     public function store(Request $request)
     {
         try {
-            DB::beginTransaction();
-
-            // Validasi manual
+            // ✅ SIMPLIFIKASI: Gunakan validasi sederhana seperti User & Table
             $validated = $request->validate([
                 'customer_name' => 'required|string|max:255',
                 'customer_email' => 'required|email',
                 'customer_phone' => 'required|string|max:20',
-                'reservation_date' => 'required|date|after:today',
+                'reservation_date' => 'required|date',
                 'reservation_time' => 'required',
                 'table_id' => 'required|exists:tables,id',
                 'guest_count' => 'required|integer|min:1',
                 'special_requests' => 'nullable|string',
             ]);
 
+            DB::beginTransaction();
+
             // Ambil meja
             $table = Table::findOrFail($request->table_id);
-            if (!$table->isAvailable()) {
-                throw new \Exception('Meja tidak tersedia');
-            }
-
-            // Buat reservasi sementara dengan total_price 0
+            
+            // Buat reservasi - SEDERHANAKAN seperti User & Table
             $reservation = Reservation::create($validated + [
                 'user_id' => auth()->id(),
                 'status' => 'pending',
-                'total_price' => 0,
+                'total_price' => 0, // Sementara 0
                 'payment_status' => 'unpaid',
             ]);
 
-            $totalPrice = 0;
-
-            // Attach menu dan hitung total price
+            // Attach menu jika ada
             if ($request->has('menus')) {
                 $menusData = [];
+                $totalPrice = 0;
+
                 foreach ($request->menus as $menuId => $quantity) {
                     $quantity = (int) $quantity;
                     if ($quantity <= 0) continue;
@@ -82,29 +73,19 @@ class ReservationController extends Controller
                     $totalPrice += $menu->price * $quantity;
                 }
 
-                if ($totalPrice <= 0) {
-                    throw new \Exception('Total harga pemesanan tidak valid. Harap pilih menu terlebih dahulu.');
+                if ($totalPrice > 0) {
+                    $reservation->menus()->attach($menusData);
+                    $reservation->update(['total_price' => $totalPrice]);
                 }
-
-                $reservation->menus()->attach($menusData);
             }
 
-            // Update total_price di reservasi
-            $reservation->update(['total_price' => $totalPrice]);
-
-            // Tandai meja sebagai reserved
+            // Update status meja
             $table->update(['status' => 'reserved']);
-
-            // Generate Midtrans snap token
-            $midtransService = new \App\Services\MidtransService();
-            $snapToken = $midtransService->createTransaction($reservation);
-
-            $reservation->update(['snap_token' => $snapToken]);
 
             DB::commit();
 
             return redirect()->route('admin.reservations.index')
-                ->with('success', 'Reservasi berhasil dibuat. Silakan lakukan pembayaran.');
+                ->with('success', 'Reservasi berhasil dibuat');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -116,7 +97,12 @@ class ReservationController extends Controller
         }
     }
 
-    // Form edit reservasi
+    // ✅ PERBAIKI: Gunakan Route Model Binding seperti User & Table
+    public function show(Reservation $reservation)
+    {
+        return view('admin.reservations.show', compact('reservation'));
+    }
+
     public function edit(Reservation $reservation)
     {
         $tables = Table::all();
@@ -124,13 +110,10 @@ class ReservationController extends Controller
         return view('admin.reservations.edit', compact('reservation', 'tables', 'menus'));
     }
 
-    // ✅ GUNAKAN Request biasa, bukan Form Request
     public function update(Request $request, Reservation $reservation)
     {
         try {
-            DB::beginTransaction();
-
-            // Validasi manual
+            // ✅ SIMPLIFIKASI: Validasi sederhana
             $validated = $request->validate([
                 'customer_name' => 'required|string|max:255',
                 'customer_email' => 'required|email',
@@ -141,6 +124,8 @@ class ReservationController extends Controller
                 'guest_count' => 'required|integer|min:1',
                 'special_requests' => 'nullable|string',
             ]);
+
+            DB::beginTransaction();
 
             $reservation->update($validated);
 
@@ -159,14 +144,15 @@ class ReservationController extends Controller
         }
     }
 
-    // Hapus reservasi
     public function destroy(Reservation $reservation)
     {
         try {
             DB::beginTransaction();
 
-            $reservation->delete();
+            // Kembalikan status meja
             $reservation->table->update(['status' => 'available']);
+            
+            $reservation->delete();
 
             DB::commit();
 
@@ -182,38 +168,38 @@ class ReservationController extends Controller
         }
     }
 
-    // Konfirmasi reservasi
+    // ✅ TAMBAHKAN: Method untuk konfirmasi dan cancel
     public function confirm(Reservation $reservation)
     {
-        return $this->updateStatus($reservation, 'confirmed', 'Reservasi dikonfirmasi');
+        try {
+            $reservation->update(['status' => 'confirmed']);
+            return back()->with('success', 'Reservasi berhasil dikonfirmasi');
+        } catch (\Exception $e) {
+            Log::error('Reservation confirmation failed: ' . $e->getMessage());
+            return back()->with('error', 'Gagal mengonfirmasi reservasi');
+        }
     }
 
-    // Batalkan reservasi
     public function cancel(Reservation $reservation)
-    {
-        return $this->updateStatus($reservation, 'cancelled', 'Reservasi dibatalkan');
-    }
-
-    // Update status helper
-    protected function updateStatus(Reservation $reservation, string $status, string $message)
     {
         try {
             DB::beginTransaction();
-
-            $reservation->update(['status' => $status]);
-
-            if ($status === 'cancelled') {
-                $reservation->table->update(['status' => 'available']);
-                $reservation->update(['cancelled_at' => now()]);
-            }
-
+            
+            $reservation->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now()
+            ]);
+            
+            // Kembalikan status meja
+            $reservation->table->update(['status' => 'available']);
+            
             DB::commit();
-
-            return back()->with('success', $message);
+            
+            return back()->with('success', 'Reservasi berhasil dibatalkan');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Status update failed: ' . $e->getMessage());
-            return back()->with('error', 'Gagal mengubah status reservasi: ' . $e->getMessage());
+            Log::error('Reservation cancellation failed: ' . $e->getMessage());
+            return back()->with('error', 'Gagal membatalkan reservasi');
         }
     }
 }

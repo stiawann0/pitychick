@@ -10,8 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class MenuController extends Controller
 {
-    // ✅ HAPUS middleware constructor, HAPUS Form Request imports
-
     public function index()
     {
         $menus = Menu::latest()->paginate(10);
@@ -23,11 +21,10 @@ class MenuController extends Controller
         return view('admin.menus.create');
     }
 
-    // ✅ GUNAKAN Request biasa, bukan Form Request
     public function store(Request $request)
     {
         try {
-            // Validasi manual
+            // Validasi manual - SAMA SEPERTI USER & TABLE
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'description' => 'required|string',
@@ -54,6 +51,7 @@ class MenuController extends Controller
         }
     }
 
+    // ✅ PERBAIKI: Gunakan Route Model Binding seperti User & Table
     public function show(Menu $menu)
     {
         return view('admin.menus.show', compact('menu'));
@@ -64,11 +62,10 @@ class MenuController extends Controller
         return view('admin.menus.edit', compact('menu'));
     }
 
-    // ✅ GUNAKAN Request biasa, bukan Form Request
     public function update(Request $request, Menu $menu)
     {
         try {
-            // Validasi manual
+            // Validasi manual - SAMA SEPERTI USER & TABLE
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'description' => 'required|string',
