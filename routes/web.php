@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ReservationController;
@@ -14,14 +12,10 @@ use App\Http\Controllers\Admin\Settings\AboutSettingsController;
 use App\Http\Controllers\Admin\Settings\ReviewSettingsController;
 use App\Http\Controllers\Admin\Settings\FooterSettingsController;
 use App\Http\Controllers\Admin\Settings\GallerySettingsController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 
 // ==========================================
 // ✅ PUBLIC ROUTES
 // ==========================================
-
-// Homepage (akan diganti React)
 Route::get('/', fn () => view('welcome'))->name('home');
 
 // Register & Login
@@ -33,7 +27,6 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 // ==========================================
 // ✅ AUTHENTICATED ROUTES (SETELAH LOGIN)
 // ==========================================
-
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Profile
@@ -45,45 +38,49 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ========================
-    // ✅ ADMIN PANEL
+    // ✅ ADMIN PANEL - FIXED STRUCTURE
     // ========================
-    Route::prefix('admin')->name('admin.')->middleware('can:manage-settings')->group(function () {
+    Route::prefix('admin')->name('admin.')->group(function () {
 
+        // Dashboard - accessible by all authenticated admin users
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Reservations
-        Route::resource('reservations', ReservationController::class)->middleware('can:manage-reservations');
-        Route::post('reservations/{reservation}/confirm', [ReservationController::class, 'confirm'])->name('reservations.confirm')->middleware('can:manage-reservations');
-        Route::post('reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->name('reservations.cancel')->middleware('can:manage-reservations');
+        // ✅ RESERVATIONS - dengan permission spesifik
+        Route::middleware('can:manage-reservations')->group(function () {
+            Route::resource('reservations', ReservationController::class);
+            Route::post('reservations/{reservation}/confirm', [ReservationController::class, 'confirm'])
+                ->name('reservations.confirm');
+            Route::post('reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])
+                ->name('reservations.cancel');
+        });
 
-        // Tables
-        Route::resource('tables', TableController::class)->middleware('can:manage-tables');
+        // ✅ TABLES - dengan permission spesifik
+        Route::middleware('can:manage-tables')->group(function () {
+            Route::resource('tables', TableController::class);
+        });
 
-        // Menus
-        Route::resource('menus', MenuController::class)->middleware('can:manage-menus');
+        // ✅ MENUS - dengan permission spesifik
+        Route::middleware('can:manage-menus')->group(function () {
+            Route::resource('menus', MenuController::class);
+        });
 
-        // Users
-        Route::resource('users', UserController::class)->middleware('can:manage-users');
+        // ✅ USERS - dengan permission spesifik
+        Route::middleware('can:manage-users')->group(function () {
+            Route::resource('users', UserController::class);
+        });
 
-        // ========================
-        // ✅ SETTINGS
-        // ========================
+        // ✅ SETTINGS - dengan permission spesifik
         Route::prefix('settings')->name('settings.')->middleware('can:manage-settings')->group(function () {
             Route::view('/', 'admin.settings.index')->name('index');
-
             Route::get('/home', [HomeSettingsController::class, 'index'])->name('home');
             Route::match(['post', 'put'], '/home', [HomeSettingsController::class, 'update'])->name('home.update');
-
             Route::get('/footer', [FooterSettingsController::class, 'index'])->name('footer');
             Route::post('/footer', [FooterSettingsController::class, 'update'])->name('footer.update');
-
             Route::get('/reviews', [ReviewSettingsController::class, 'index'])->name('reviews');
             Route::post('/reviews', [ReviewSettingsController::class, 'store'])->name('reviews.store');
             Route::delete('/reviews/{id}', [ReviewSettingsController::class, 'destroy'])->name('reviews.destroy');
-
             Route::get('/about', [AboutSettingsController::class, 'index'])->name('about');
             Route::post('/about', [AboutSettingsController::class, 'update'])->name('about.update');
-
             Route::get('/gallery', [GallerySettingsController::class, 'index'])->name('gallery');
             Route::post('/gallery', [GallerySettingsController::class, 'store'])->name('gallery.store');
             Route::delete('/gallery/{gallery}', [GallerySettingsController::class, 'destroy'])->name('gallery.destroy');
@@ -91,7 +88,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-// ==========================================
-// ✅ INCLUDE AUTH (Breeze / Fortify)
-// ==========================================
 require __DIR__ . '/auth.php';
