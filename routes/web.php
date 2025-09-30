@@ -17,7 +17,6 @@ use App\Http\Controllers\Admin\Settings\GallerySettingsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
-
 // ==========================================
 // ✅ PUBLIC ROUTES
 // ==========================================
@@ -48,28 +47,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ========================
     // ✅ ADMIN PANEL
     // ========================
-    Route::prefix('admin')->name('admin.')->middleware('can:admin')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('can:manage-settings')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Reservations
-        Route::resource('reservations', ReservationController::class);
-        Route::post('reservations/{reservation}/confirm', [ReservationController::class, 'confirm'])->name('reservations.confirm');
-        Route::post('reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->name('reservations.cancel');
+        Route::resource('reservations', ReservationController::class)->middleware('can:manage-reservations');
+        Route::post('reservations/{reservation}/confirm', [ReservationController::class, 'confirm'])->name('reservations.confirm')->middleware('can:manage-reservations');
+        Route::post('reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->name('reservations.cancel')->middleware('can:manage-reservations');
 
         // Tables
-        Route::resource('tables', TableController::class);
+        Route::resource('tables', TableController::class)->middleware('can:manage-tables');
 
         // Menus
-        Route::resource('menus', MenuController::class);
+        Route::resource('menus', MenuController::class)->middleware('can:manage-menus');
 
         // Users
-        Route::resource('users', UserController::class);
+        Route::resource('users', UserController::class)->middleware('can:manage-users');
 
         // ========================
         // ✅ SETTINGS
         // ========================
-        Route::prefix('settings')->name('settings.')->group(function () {
+        Route::prefix('settings')->name('settings.')->middleware('can:manage-settings')->group(function () {
             Route::view('/', 'admin.settings.index')->name('index');
 
             Route::get('/home', [HomeSettingsController::class, 'index'])->name('home');
