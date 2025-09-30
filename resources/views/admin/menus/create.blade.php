@@ -24,7 +24,11 @@
                             <div>
                                 <label for="name" class="block text-sm font-medium text-gray-700">Nama Menu</label>
                                 <input type="text" name="name" id="name" required
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                    value="{{ old('name') }}">
+                                @error('name')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div>
@@ -32,28 +36,42 @@
                                 <select name="category" id="category" required
                                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
                                     <option value="">Pilih Kategori</option>
-                                    <option value="makanan">Makanan</option>
-                                    <option value="minuman">Minuman</option>
-                                    <option value="lainnya">Lainnya</option>
+                                    <option value="minuman" {{ old('category') == 'minuman' ? 'selected' : '' }}>Minuman</option>
+                                    <option value="snack" {{ old('category') == 'snack' ? 'selected' : '' }}>Snack</option>
+                                    <option value="original" {{ old('category') == 'original' ? 'selected' : '' }}>Original</option>
+                                    <option value="tambahan" {{ old('category') == 'tambahan' ? 'selected' : '' }}>Tambahan</option>
                                 </select>
+                                @error('category')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div>
                                 <label for="price" class="block text-sm font-medium text-gray-700">Harga</label>
                                 <input type="number" name="price" id="price" min="0" required
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                    value="{{ old('price') }}">
+                                @error('price')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div>
                                 <label for="image" class="block text-sm font-medium text-gray-700">Gambar Menu</label>
-                                <input type="file" name="image" id="image"
+                                <input type="file" name="image" id="image" accept="image/*"
                                     class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
+                                @error('image')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="md:col-span-2">
                                 <label for="description" class="block text-sm font-medium text-gray-700">Deskripsi</label>
                                 <textarea name="description" id="description" rows="3"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></textarea>
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">{{ old('description') }}</textarea>
+                                @error('description')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
