@@ -17,69 +17,6 @@ use App\Http\Controllers\Admin\Settings\GallerySettingsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
-// ==========================================
-// ✅ DEBUG & MAINTENANCE ROUTES (TEMPORARY)
-// ==========================================
-
-// Untuk test koneksi database
-Route::get('/db-test', function () {
-    try {
-        DB::connection()->getPdo();
-        return response()->json([
-            'status' => 'success',
-            'message' => '✅ Database connected!',
-            'database' => DB::connection()->getDatabaseName()
-        ]);
-    } catch (Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => '❌ DB connection failed: ' . $e->getMessage()
-        ]);
-    }
-});
-
-// Jalankan migration
-Route::get('/migrate', function () {
-    Artisan::call('migrate', ['--force' => true]);
-    return '✅ Migration completed';
-});
-
-// Jalankan seeding
-Route::get('/seed', function () {
-    Artisan::call('db:seed', ['--force' => true]);
-    return '✅ Seeding completed';
-});
-
-// Reset database + seeding
-Route::get('/reset-db', function () {
-    Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
-    return '✅ Database reset & seeded';
-});
-
-// Clear + cache config/view/route
-Route::get('/cache-clear', function () {
-    Artisan::call('config:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('route:clear');
-    Artisan::call('view:clear');
-    return '✅ Cache cleared!';
-});
-
-Route::get('/cache-optimize', function () {
-    Artisan::call('config:cache');
-    Artisan::call('route:cache');
-    Artisan::call('view:cache');
-    return '✅ Cache optimized!';
-});
-
-// Test App Jalan
-Route::get('/health', fn () => response()->json([
-    'app' => 'Laravel',
-    'version' => app()->version(),
-    'env' => app()->environment(),
-    'url' => config('app.url'),
-    'debug' => config('app.debug')
-]));
 
 // ==========================================
 // ✅ PUBLIC ROUTES

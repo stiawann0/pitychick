@@ -15,7 +15,8 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        if (!Auth::user()->isAdmin()) {
+        // Gunakan Spatie Permission - PASTIKAN INI
+        if (!Auth::user()->hasRole('admin')) {
             abort(403, 'Unauthorized access');
         }
 
