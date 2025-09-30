@@ -14,7 +14,7 @@ class PermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create permissions
+        // Create permissions only if they don't exist
         $permissions = [
             'view dashboard',
             'manage reservations', 
@@ -30,26 +30,31 @@ class PermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Create roles and assign permissions
-        $adminRole = Role::create(['name' => 'admin']);
-        $adminRole->givePermissionTo($permissions); // All permissions
+        // Create roles only if they don't exist
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $customerRole = Role::firstOrCreate(['name' => 'customer']);
 
-        $customerRole = Role::create(['name' => 'customer']);
-        $customerRole->givePermissionTo(['view dashboard']); // Limited permissions
+        // Assign all permissions to admin role
+        $adminRole->syncPermissions($permissions);
+
+        // Assign limited permissions to customer role
+        $customerRole->syncPermissions(['view dashboard']);
 
         // Assign admin role to existing admin user
         $adminUser = \App\Models\User::where('email', 'admin@pitychick.com')->first();
-        if ($adminUser) {
+        if ($adminUser && !$adminUser->hasRole('admin')) {
             $adminUser->assignRole('admin');
         }
 
         // Assign customer role to existing customer users
-        $customerUsers = \App\Models\User::where('email', '!=', 'customer@pitychick.com')->get();
+        $customerUsers = \App\Models\User::where('email', '!=', 'admin@pitychick.com')->get();
         foreach ($customerUsers as $user) {
-            $user->assignRole('customer');
+            if (!$user->hasRole('customer')) {
+                $user->assignRole('customer');
+            }
         }
     }
 }
