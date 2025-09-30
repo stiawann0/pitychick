@@ -12,6 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Trust all proxies (untuk Railway)
+        $middleware->trustProxies(at: '*');
+        
+        // Disable CSRF untuk login/logout
+        $middleware->validateCsrfTokens(except: [
+            'login',
+            'logout'
+        ]);
+        
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'admin' => \App\Http\Middleware\EnsureIsAdmin::class,
@@ -20,9 +29,3 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
-
-    $app->middleware([
-    // Global middleware
-    ]);
-
-    
