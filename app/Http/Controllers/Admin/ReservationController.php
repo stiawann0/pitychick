@@ -14,10 +14,8 @@ use App\Services\MidtransService;
 
 class ReservationController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('can:admin');
-    }
+    // ✅ HAPUS middleware constructor karena sudah ada di routes
+    // Biarkan kosong, routes sudah handle permissions
 
     // Tampilkan daftar reservasi
     public function index()
@@ -36,77 +34,77 @@ class ReservationController extends Controller
 
     // Simpan reservasi baru
     public function store(StoreReservationRequest $request)
-{
-    try {
-        DB::beginTransaction();
+    {
+        try {
+            DB::beginTransaction();
 
-        // Ambil meja
-        $table = Table::findOrFail($request->table_id);
-        if (!$table->isAvailable()) {
-            throw new \Exception('Meja tidak tersedia');
-        }
-
-        // Buat reservasi sementara dengan total_price 0
-        $reservation = Reservation::create($request->validated() + [
-            'user_id' => auth()->id(),
-            'status' => Reservation::STATUS_PENDING,
-            'total_price' => 0,
-            'payment_status' => 'unpaid',
-        ]);
-
-        $totalPrice = 0;
-
-        // Attach menu dan hitung total price
-        if ($request->has('menus')) {
-            $menusData = [];
-            foreach ($request->menus as $menuId => $quantity) {
-                $quantity = (int) $quantity;
-                if ($quantity <= 0) continue;
-
-                $menu = Menu::find($menuId);
-                if (!$menu) continue;
-
-                $menusData[$menuId] = [
-                    'quantity' => $quantity,
-                    'price' => $menu->price,
-                ];
-
-                $totalPrice += $menu->price * $quantity;
+            // Ambil meja
+            $table = Table::findOrFail($request->table_id);
+            if (!$table->isAvailable()) {
+                throw new \Exception('Meja tidak tersedia');
             }
 
-            if ($totalPrice <= 0) {
-                throw new \Exception('Total harga pemesanan tidak valid. Harap pilih menu terlebih dahulu.');
+            // Buat reservasi sementara dengan total_price 0
+            $reservation = Reservation::create($request->validated() + [
+                'user_id' => auth()->id(),
+                'status' => Reservation::STATUS_PENDING,
+                'total_price' => 0,
+                'payment_status' => 'unpaid',
+            ]);
+
+            $totalPrice = 0;
+
+            // Attach menu dan hitung total price
+            if ($request->has('menus')) {
+                $menusData = [];
+                foreach ($request->menus as $menuId => $quantity) {
+                    $quantity = (int) $quantity;
+                    if ($quantity <= 0) continue;
+
+                    $menu = Menu::find($menuId);
+                    if (!$menu) continue;
+
+                    $menusData[$menuId] = [
+                        'quantity' => $quantity,
+                        'price' => $menu->price,
+                    ];
+
+                    $totalPrice += $menu->price * $quantity;
+                }
+
+                if ($totalPrice <= 0) {
+                    throw new \Exception('Total harga pemesanan tidak valid. Harap pilih menu terlebih dahulu.');
+                }
+
+                $reservation->menus()->attach($menusData);
             }
 
-            $reservation->menus()->attach($menusData);
+            // Update total_price di reservasi
+            $reservation->update(['total_price' => $totalPrice]);
+
+            // Tandai meja sebagai reserved
+            $table->update(['status' => Table::STATUS_RESERVED]);
+
+            // Generate Midtrans snap token (kirim object Reservation langsung)
+            $midtransService = new \App\Services\MidtransService();
+            $snapToken = $midtransService->createTransaction($reservation);
+
+            $reservation->update(['snap_token' => $snapToken]);
+
+            DB::commit();
+
+            return redirect()->route('admin.reservations.index')
+                ->with('success', 'Reservasi berhasil dibuat. Silakan lakukan pembayaran.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Reservation creation failed: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal membuat reservasi: ' . $e->getMessage());
         }
-
-        // Update total_price di reservasi
-        $reservation->update(['total_price' => $totalPrice]);
-
-        // Tandai meja sebagai reserved
-        $table->update(['status' => Table::STATUS_RESERVED]);
-
-        // Generate Midtrans snap token (kirim object Reservation langsung)
-        $midtransService = new \App\Services\MidtransService();
-        $snapToken = $midtransService->createTransaction($reservation);
-
-        $reservation->update(['snap_token' => $snapToken]);
-
-        DB::commit();
-
-        return redirect()->route('admin.reservations.index')
-            ->with('success', 'Reservasi berhasil dibuat. Silakan lakukan pembayaran.');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Reservation creation failed: ' . $e->getMessage());
-
-        return redirect()->back()
-            ->withInput()
-            ->with('error', 'Gagal membuat reservasi: ' . $e->getMessage());
     }
-}
 
     // Form edit reservasi
     public function edit(Reservation $reservation)

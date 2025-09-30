@@ -7,13 +7,12 @@ use App\Http\Requests\StoreMenuRequest;
 use App\Http\Requests\UpdateMenuRequest;
 use App\Models\Menu;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class MenuController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('can:admin');
-    }
+    // ✅ HAPUS middleware constructor karena sudah ada di routes
+    // Biarkan kosong, routes sudah handle permissions
 
     public function index()
     {
@@ -49,9 +48,9 @@ class MenuController extends Controller
     }
 
     public function show(Menu $menu)
-{
-    return view('admin.menus.show', compact('menu'));
-}
+    {
+        return view('admin.menus.show', compact('menu'));
+    }
 
     public function edit(Menu $menu)
     {
