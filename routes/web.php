@@ -18,6 +18,36 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
 // =============================
+// ✅ TEST ROUTES UNTUK RAILWAY (TANPA DATABASE)
+// =============================
+Route::get('/test', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'App is running without database',
+        'timestamp' => now(),
+        'environment' => app()->environment()
+    ]);
+});
+
+Route::get('/health', function () {
+    return response()->json([
+        'app' => 'Laravel',
+        'version' => app()->version(),
+        'environment' => app()->environment(),
+        'url' => config('app.url'),
+        'debug' => config('app.debug')
+    ]);
+});
+
+// Route test untuk check session
+Route::get('/session-test', function () {
+    return response()->json([
+        'session_id' => session()->getId(),
+        'session_data' => session()->all()
+    ]);
+});
+
+// =============================
 // ✅ Public Homepage
 // =============================
 Route::get('/', function () {
