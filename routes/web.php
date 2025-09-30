@@ -149,6 +149,22 @@ Route::get('/run-cache', function() {
     return 'Config, route & view cached';
 });
 
+Route::get('/clear-cache', function() {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('config:cache');
+    return 'Cache cleared and config re-cached!';
+});
+
+Route::get('/debug-db', function() {
+    return response()->json([
+        'db_connection' => config('database.default'),
+        'db_host' => config('database.connections.mysql.host'),
+        'db_port' => config('database.connections.mysql.port'),
+        'env_db_connection' => env('DB_CONNECTION'),
+        'env_db_host' => env('DB_HOST')
+    ]);
+});
 // =============================
 // ✅ Auth routes (register, login)
 // =============================
