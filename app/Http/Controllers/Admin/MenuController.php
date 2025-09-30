@@ -3,16 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreMenuRequest;
-use App\Http\Requests\UpdateMenuRequest;
 use App\Models\Menu;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class MenuController extends Controller
 {
-    // ✅ HAPUS middleware constructor karena sudah ada di routes
-    // Biarkan kosong, routes sudah handle permissions
+    // ✅ HAPUS middleware constructor, HAPUS Form Request imports
 
     public function index()
     {
@@ -25,16 +23,25 @@ class MenuController extends Controller
         return view('admin.menus.create');
     }
 
-    public function store(StoreMenuRequest $request)
+    // ✅ GUNAKAN Request biasa, bukan Form Request
+    public function store(Request $request)
     {
         try {
-            $data = $request->validated();
-            
+            // Validasi manual
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'price' => 'required|numeric|min:0',
+                'category' => 'required|in:minuman,snack,original,tambahan',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            // Upload image jika ada
             if ($request->hasFile('image')) {
-                $data['image'] = $request->file('image')->store('menu-images', 'public');
+                $validated['image'] = $request->file('image')->store('menu-images', 'public');
             }
 
-            Menu::create($data);
+            Menu::create($validated);
 
             return redirect()->route('admin.menus.index')
                 ->with('success', 'Menu berhasil ditambahkan');
@@ -43,7 +50,7 @@ class MenuController extends Controller
             Log::error('Menu creation failed: ' . $e->getMessage());
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Gagal menambahkan menu');
+                ->with('error', 'Gagal menambahkan menu: ' . $e->getMessage());
         }
     }
 
@@ -57,19 +64,30 @@ class MenuController extends Controller
         return view('admin.menus.edit', compact('menu'));
     }
 
-    public function update(UpdateMenuRequest $request, Menu $menu)
+    // ✅ GUNAKAN Request biasa, bukan Form Request
+    public function update(Request $request, Menu $menu)
     {
         try {
-            $data = $request->validated();
-            
+            // Validasi manual
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'price' => 'required|numeric|min:0',
+                'category' => 'required|in:minuman,snack,original,tambahan',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            // Handle image update
             if ($request->hasFile('image')) {
+                // Delete old image
                 if ($menu->image) {
                     Storage::disk('public')->delete($menu->image);
                 }
-                $data['image'] = $request->file('image')->store('menu-images', 'public');
+                // Store new image
+                $validated['image'] = $request->file('image')->store('menu-images', 'public');
             }
 
-            $menu->update($data);
+            $menu->update($validated);
 
             return redirect()->route('admin.menus.index')
                 ->with('success', 'Menu berhasil diperbarui');
@@ -78,13 +96,14 @@ class MenuController extends Controller
             Log::error('Menu update failed: ' . $e->getMessage());
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Gagal memperbarui menu');
+                ->with('error', 'Gagal memperbarui menu: ' . $e->getMessage());
         }
     }
 
     public function destroy(Menu $menu)
     {
         try {
+            // Delete image if exists
             if ($menu->image) {
                 Storage::disk('public')->delete($menu->image);
             }
@@ -97,7 +116,7 @@ class MenuController extends Controller
         } catch (\Exception $e) {
             Log::error('Menu deletion failed: ' . $e->getMessage());
             return redirect()->back()
-                ->with('error', 'Gagal menghapus menu');
+                ->with('error', 'Gagal menghapus menu: ' . $e->getMessage());
         }
     }
 }
