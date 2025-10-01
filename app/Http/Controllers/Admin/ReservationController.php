@@ -26,7 +26,7 @@ class ReservationController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validasi manual - TANPA menu
+            // Validasi manual - SESUAI DATABASE
             $validated = $request->validate([
                 'customer_name' => 'required|string|max:255',
                 'customer_email' => 'required|email',
@@ -34,8 +34,8 @@ class ReservationController extends Controller
                 'reservation_date' => 'required|date|after_or_equal:today',
                 'reservation_time' => 'required',
                 'table_id' => 'required|exists:tables,id',
-                'guest_count' => 'required|integer|min:1',
-                'special_requests' => 'nullable|string',
+                'guest_number' => 'required|integer|min:1|max:20',
+                'notes' => 'nullable|string|max:500',
             ]);
 
             DB::beginTransaction();
@@ -50,20 +50,22 @@ class ReservationController extends Controller
                     ->with('error', 'Meja tidak tersedia. Silakan pilih meja lain.');
             }
 
-            // Buat reservasi - TANPA menu
+            // Format waktu untuk database
+            $reservationTime = $validated['reservation_date'] . ' ' . $validated['reservation_time'] . ':00';
+
+            // Buat reservasi - SESUAI DATABASE SCHEMA
             $reservation = Reservation::create([
                 'customer_name' => $validated['customer_name'],
                 'customer_email' => $validated['customer_email'],
                 'customer_phone' => $validated['customer_phone'],
                 'reservation_date' => $validated['reservation_date'],
-                'reservation_time' => $validated['reservation_time'],
+                'reservation_time' => $reservationTime,
                 'table_id' => $validated['table_id'],
-                'guest_count' => $validated['guest_count'],
-                'special_requests' => $validated['special_requests'],
+                'guest_number' => $validated['guest_number'],
+                'notes' => $validated['notes'],
                 'user_id' => auth()->id(),
                 'status' => 'pending',
-                'total_price' => 0, // Tetap 0 karena tanpa menu
-                'payment_status' => 'unpaid',
+                'is_walk_in' => false,
             ]);
 
             // Update status meja
@@ -98,7 +100,7 @@ class ReservationController extends Controller
     public function update(Request $request, Reservation $reservation)
     {
         try {
-            // Validasi sederhana - TANPA menu
+            // Validasi sederhana - SESUAI DATABASE
             $validated = $request->validate([
                 'customer_name' => 'required|string|max:255',
                 'customer_email' => 'required|email',
@@ -106,8 +108,8 @@ class ReservationController extends Controller
                 'reservation_date' => 'required|date',
                 'reservation_time' => 'required',
                 'table_id' => 'required|exists:tables,id',
-                'guest_count' => 'required|integer|min:1',
-                'special_requests' => 'nullable|string',
+                'guest_number' => 'required|integer|min:1',
+                'notes' => 'nullable|string',
             ]);
 
             DB::beginTransaction();

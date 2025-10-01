@@ -23,7 +23,8 @@
 
                     @if ($errors->any())
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                            <ul class="list-disc list-inside">
+                            <strong class="font-bold">Error!</strong>
+                            <ul class="list-disc list-inside mt-2">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -86,14 +87,14 @@
                                 </div>
 
                                 <div>
-                                    <label for="guest_count" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <label for="guest_number" class="block text-sm font-medium text-gray-700 mb-2">
                                         Jumlah Tamu *
                                     </label>
-                                    <input type="number" name="guest_count" id="guest_count" min="1" max="20" required
+                                    <input type="number" name="guest_number" id="guest_number" min="1" max="20" required
                                         class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                        value="{{ old('guest_count', 2) }}"
+                                        value="{{ old('guest_number', 2) }}"
                                         placeholder="Jumlah tamu">
-                                    @error('guest_count')
+                                    @error('guest_number')
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
@@ -136,7 +137,7 @@
                                         </label>
                                         <input type="date" name="reservation_date" id="reservation_date" required
                                             class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                            value="{{ old('reservation_date') }}"
+                                            value="{{ old('reservation_date', date('Y-m-d')) }}"
                                             min="{{ date('Y-m-d') }}">
                                         @error('reservation_date')
                                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -160,13 +161,13 @@
 
                         <!-- Catatan Khusus -->
                         <div class="mb-8">
-                            <label for="special_requests" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
                                 Catatan Khusus (Opsional)
                             </label>
-                            <textarea name="special_requests" id="special_requests" rows="4"
+                            <textarea name="notes" id="notes" rows="4"
                                 class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                                placeholder="Contoh: Meja dekat jendela, ada alergi makanan tertentu, dll.">{{ old('special_requests') }}</textarea>
-                            @error('special_requests')
+                                placeholder="Contoh: Meja dekat jendela, ada alergi makanan tertentu, ulang tahun, dll.">{{ old('notes') }}</textarea>
+                            @error('notes')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -179,7 +180,7 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm text-yellow-800">
-                                        <strong>Note:</strong> Reservasi ini hanya untuk pemesanan tempat. 
+                                        <strong>Informasi:</strong> Reservasi ini hanya untuk pemesanan tempat. 
                                         Pesanan makanan/minuman dapat dilakukan langsung di restoran.
                                     </p>
                                 </div>
@@ -189,15 +190,15 @@
                         <!-- Tombol -->
                         <div class="flex justify-end space-x-4 pt-6 border-t">
                             <a href="{{ route('admin.reservations.index') }}" 
-                               class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200 font-medium">
-                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200 font-medium flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
                                 Batal
                             </a>
                             <button type="submit" 
                                     class="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-200 font-medium shadow-sm flex items-center">
-                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                                 Buat Reservasi
@@ -213,11 +214,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Set minimum date to today
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('reservation_date').min = today;
+        const dateInput = document.getElementById('reservation_date');
+        dateInput.min = today;
         
         // Set default date to today if empty
-        if (!document.getElementById('reservation_date').value) {
-            document.getElementById('reservation_date').value = today;
+        if (!dateInput.value) {
+            dateInput.value = today;
         }
         
         // Filter hanya meja yang available
@@ -227,8 +229,56 @@
         for (let i = 0; i < options.length; i++) {
             if (options[i].textContent.includes('TIDAK TERSEDIA')) {
                 options[i].disabled = true;
+                if (options[i].selected) {
+                    options[i].selected = false;
+                }
             }
         }
+
+        // Auto-select first available table if none selected
+        if (!tableSelect.value) {
+            for (let i = 0; i < options.length; i++) {
+                if (!options[i].disabled && options[i].value !== '') {
+                    tableSelect.value = options[i].value;
+                    break;
+                }
+            }
+        }
+
+        // Real-time validation for guest number
+        const guestNumberInput = document.getElementById('guest_number');
+        guestNumberInput.addEventListener('change', function() {
+            if (this.value < 1) {
+                this.value = 1;
+            }
+            if (this.value > 20) {
+                this.value = 20;
+            }
+        });
+
+        // Real-time validation for date
+        dateInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                alert('Tanggal reservasi tidak boleh kurang dari hari ini');
+                this.value = today.toISOString().split('T')[0];
+            }
+        });
     });
     </script>
+
+    <style>
+    select option:disabled {
+        color: #ef4444 !important;
+        background-color: #fef2f2 !important;
+    }
+    
+    select option {
+        color: #1f2937 !important;
+        background-color: white !important;
+    }
+    </style>
 </x-app-layout>
