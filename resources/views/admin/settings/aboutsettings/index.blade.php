@@ -57,7 +57,7 @@
                             class="w-full rounded-md border-gray-300 shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
                         @if(!empty($about->main_image))
                             <div class="mt-3">
-                                <img src="{{ asset($about->main_image) }}" alt="Main Image" class="w-40 h-40 rounded-md border shadow">
+                                <<img src="{{ asset('storage/' . $about->main_image) }}" alt="Main Image" class="w-40 h-40 rounded-md border shadow">
                             </div>
                         @endif
                         @error('main_image')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
@@ -69,7 +69,7 @@
                             class="w-full rounded-md border-gray-300 shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
                         @if(!empty($about->story_image))
                             <div class="mt-3">
-                                <img src="{{ asset($about->story_image) }}" alt="Story Image" class="w-40 h-40 rounded-md border shadow">
+                                <img src="{{ asset('storage/' . $about->story_image) }}" alt="Story Image" class="w-40 h-40 rounded-md border shadow">
                             </div>
                         @endif
                         @error('story_image')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror

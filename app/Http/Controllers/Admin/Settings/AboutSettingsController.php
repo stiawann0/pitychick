@@ -36,13 +36,6 @@ class AboutSettingsController extends Controller
             $about->description_1 = $request->description_1;
             $about->description_2 = $request->description_2;
 
-            // Simpan ke storage/app/public/about-images
-            $destinationPath = storage_path('app/public/about-images');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-
-            // Main Image
             if ($request->hasFile('main_image')) {
                 // Hapus gambar lama jika ada
                 if ($about->main_image && Storage::disk('public')->exists($about->main_image)) {
@@ -51,11 +44,10 @@ class AboutSettingsController extends Controller
 
                 $mainImage = $request->file('main_image');
                 $mainImageName = uniqid() . '.' . $mainImage->getClientOriginalExtension();
-                $mainImage->storeAs('public/about-images', $mainImageName);
+                $mainImage->storeAs('about-images', $mainImageName, 'public');
                 $about->main_image = 'about-images/' . $mainImageName;
             }
 
-            // Story Image
             if ($request->hasFile('story_image')) {
                 // Hapus gambar lama jika ada
                 if ($about->story_image && Storage::disk('public')->exists($about->story_image)) {
@@ -64,7 +56,7 @@ class AboutSettingsController extends Controller
 
                 $storyImage = $request->file('story_image');
                 $storyImageName = uniqid() . '.' . $storyImage->getClientOriginalExtension();
-                $storyImage->storeAs('public/about-images', $storyImageName);
+                $storyImage->storeAs('about-images', $storyImageName, 'public');
                 $about->story_image = 'about-images/' . $storyImageName;
             }
 
