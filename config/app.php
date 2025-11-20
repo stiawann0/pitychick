@@ -126,5 +126,5 @@ return [
 
     'min_reservation_hours' => env('MIN_RESERVATION_HOURS', 2),
     'open_hours_start' => env('OPEN_HOURS_START', 9),
-    'open_hours_end' => env('OPEN_HOURS_END', 21),
+    'open_hours_end' => env('OPEN_HOURS_END', 21),    
 ];

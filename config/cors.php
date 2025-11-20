@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register', 'admin/*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
         'https://frontend-production-c996.up.railway.app',
@@ -13,5 +13,5 @@ return [
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
-    'supports_credentials' => false, // Set false dulu
+    'supports_credentials' => true, // Set false dulu
 ];

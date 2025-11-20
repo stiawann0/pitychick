@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daftar Menu | Pity Chick</title>
+  <title>Manajemen Pesanan | Pity Chick</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -17,6 +17,12 @@
     .dark-mode main { 
       background-color: #1f2937 !important; 
       color: #e5e7eb !important; 
+    }
+    
+    /* Card colors tetap sama di semua mode */
+    .card-red { 
+      background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%) !important; 
+      color: white !important; 
     }
     
     /* Header dark mode - SAMA DENGAN DASHBOARD */
@@ -80,12 +86,17 @@
       color: #fecaca !important;
     }
 
-    /* Tabel dark mode improvements */
-    .dark-mode .text-gray-400 {
-      color: #9ca3af !important;
+    /* Filter dark mode - SESUAIKAN */
+    .dark-mode .bg-gray-200 {
+      background-color: #374151 !important;
+      color: #d1d5db !important;
     }
-    .dark-mode .text-gray-500 {
-      color: #6b7280 !important;
+    .dark-mode .bg-gray-200:hover {
+      background-color: #4b5563 !important;
+    }
+    .dark-mode .bg-gray-800 {
+      background-color: #1f2937 !important;
+      color: #ffffff !important;
     }
 
     /* Responsive improvements */
@@ -155,10 +166,10 @@
         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
           <span class="material-icons">dashboard</span> Dashboard
         </a>
-        <a href="{{ route('admin.orders.index') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
+        <a href="{{ route('admin.orders.index') }}" class="flex items-center gap-2 p-3 rounded-lg bg-red-800 hover:bg-red-700 transition">
           <span class="material-icons">receipt</span> Pesanan
         </a>
-        <a href="{{ route('admin.menus.index') }}" class="flex items-center gap-2 p-3 rounded-lg bg-red-800 hover:bg-red-700 transition">
+        <a href="{{ route('admin.menus.index') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
           <span class="material-icons">restaurant</span> Menu
         </a>
         <a href="{{ route('admin.reservations.index') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
@@ -203,25 +214,29 @@
             <span class="material-icons text-2xl md:text-3xl">menu</span>
           </button>
           <div>
-            <h1 class="text-lg md:text-xl font-bold text-red-700 transition-colors duration-500">Daftar Menu</h1>
-            <p class="text-gray-500 text-xs md:text-sm transition-colors duration-500">Kelola semua menu makanan dan minuman</p>
+            <h1 class="text-lg md:text-xl font-bold text-red-700 transition-colors duration-500">
+              Manajemen Pesanan @if($status) - <span class="capitalize">{{ $status }}</span> @endif
+            </h1>
+            <p class="text-gray-500 text-xs md:text-sm transition-colors duration-500">Kelola semua pesanan pelanggan</p>
           </div>
         </div>
-        
-        <div class="flex items-center gap-2 md:gap-3">
-          <!-- TOMBOL CREATE MENU BARU -->
-          <a href="{{ route('admin.menus.create') }}" 
-             class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 shadow-md">
-            <span class="material-icons text-sm">add</span>
-            <span class="hidden sm:inline">Tambah Menu</span>
-          </a>
-        </div>
+        <!-- KALENDER DIHAPUS DARI SINI -->
       </header>
 
       <!-- Content Area -->
       <div class="p-4 md:p-6">
 
-        <!-- Notifikasi sukses -->
+        <!-- Filter Status -->
+        <div class="flex gap-2 mb-6 flex-wrap">
+          <a href="{{ route('admin.orders.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-500 {{ !$status ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">Semua</a>
+          @foreach(['pending', 'confirmed', 'processed', 'delivered', 'completed', 'cancelled'] as $filter)
+            <a href="{{ route('admin.orders.index', ['status' => $filter]) }}" class="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-500 {{ $status === $filter ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+              {{ ucfirst($filter) }}
+            </a>
+          @endforeach
+        </div>
+
+        <!-- Notifikasi -->
         @if(session('success'))
           <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded transition-colors duration-500">
             <div class="flex items-center">
@@ -230,7 +245,6 @@
             </div>
           </div>
         @endif
-
         @if(session('error'))
           <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded transition-colors duration-500">
             <div class="flex items-center">
@@ -240,63 +254,81 @@
           </div>
         @endif
 
-        <!-- Tabel Menu -->
+        <!-- Tabel Pesanan -->
         <div class="overflow-x-auto bg-white shadow-md rounded-xl border border-gray-200 transition-colors duration-500">
           <table class="w-full text-sm text-left border-collapse">
             <thead class="bg-red-700 text-white uppercase text-xs text-center">
               <tr>
-                <th scope="col" class="px-6 py-3">No</th>
-                <th scope="col" class="px-6 py-3">Nama Menu</th>
-                <th scope="col" class="px-6 py-3">Kategori</th>
-                <th scope="col" class="px-6 py-3">Harga</th>
-                <th scope="col" class="px-6 py-3">Gambar</th>
-                <th scope="col" class="px-6 py-3">Aksi</th>
+                <th class="px-6 py-3">ID Pesanan</th>
+                <th class="px-6 py-3">Customer</th>
+                <th class="px-6 py-3">Metode</th>
+                <th class="px-6 py-3">Total</th>
+                <th class="px-6 py-3">Status</th>
+                <th class="px-6 py-3">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              @forelse($menus as $index => $menu)
+              @forelse($orders as $order)
                 <tr class="border-b border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-500">
-                  <td class="px-6 py-4 text-center">{{ $index + 1 }}</td>
-                  <td class="px-6 py-4 font-medium">{{ $menu->name }}</td>
+                  <td class="px-6 py-4 font-mono">{{ $order->order_id }}<br><span class="text-xs text-gray-500 transition-colors duration-500">{{ $order->created_at->format('d/m/Y H:i') }}</span></td>
+                  <td class="px-6 py-4">
+                    {{ $order->customer['name'] ?? 'N/A' }}<br>
+                    <span class="text-gray-500 text-sm transition-colors duration-500">{{ $order->customer['phone'] ?? '' }}</span>
+                  </td>
                   <td class="px-6 py-4">
                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
-                      {{ $menu->category === 'makanan' ? 'bg-green-100 text-green-800' : '' }}
-                      {{ $menu->category === 'minuman' ? 'bg-blue-100 text-blue-800' : '' }}
-                      {{ $menu->category === 'snack' ? 'bg-yellow-100 text-yellow-800' : '' }}">
-                      {{ ucfirst($menu->category) }}
+                      {{ $order->payment_method === 'COD' ? 'bg-purple-100 text-purple-800' : '' }}
+                      {{ $order->payment_method === 'Transfer' ? 'bg-blue-100 text-blue-800' : '' }}
+                      {{ $order->payment_method === 'QRIS' ? 'bg-green-100 text-green-800' : '' }}">
+                      {{ $order->payment_method }}
+                    </span>
+                    <div class="text-xs text-gray-500 mt-1 transition-colors duration-500">{{ $order->payment_status === 'paid' ? 'Lunas' : 'Pending' }}</div>
+                  </td>
+                  <td class="px-6 py-4 font-semibold">Rp {{ number_format($order->totals['grand_total'] ?? 0, 0, ',', '.') }}</td>
+                  <td class="px-6 py-4">
+                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                      {{ $order->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                      {{ $order->status === 'confirmed' ? 'bg-blue-100 text-blue-800' : '' }}
+                      {{ $order->status === 'processed' ? 'bg-purple-100 text-purple-800' : '' }}
+                      {{ $order->status === 'delivered' ? 'bg-green-100 text-green-800' : '' }}
+                      {{ $order->status === 'completed' ? 'bg-gray-100 text-gray-800' : '' }}
+                      {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
+                      {{ ucfirst($order->status) }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 font-semibold">Rp {{ number_format($menu->price, 0, ',', '.') }}</td>
-                  <td class="px-6 py-4">
-                    @if($menu->image)
-                      <img src="{{ asset('storage/' . $menu->image) }}" alt="Menu Image" class="w-12 h-12 rounded-lg object-cover border border-gray-200">
-                    @else
-                      <span class="text-gray-400 italic text-sm transition-colors duration-500">Tidak ada gambar</span>
-                    @endif
-                  </td>
-                  <td class="px-6 py-4 flex gap-2 justify-center flex-wrap">
-                    <a href="{{ route('admin.menus.edit', $menu->id) }}" 
-                       class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-sm transition-colors flex items-center gap-1">
-                      <span class="material-icons text-sm">edit</span> Edit
+                  <td class="px-6 py-4 flex gap-2 flex-wrap">
+                    <a href="{{ route('admin.orders.show', $order) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm transition-colors flex items-center gap-1">
+                      <span class="material-icons text-sm">visibility</span> Detail
                     </a>
-                    <form action="{{ route('admin.menus.destroy', $menu->id) }}" method="POST" 
-                          onsubmit="return confirm('Yakin ingin menghapus menu {{ $menu->name }}?')">
-                      @csrf
-                      @method('DELETE')
-                      <button type="submit" 
-                              class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm transition-colors flex items-center gap-1">
-                        <span class="material-icons text-sm">delete</span> Hapus
+                    @if($order->status === 'pending')
+                      <button onclick="updateOrderStatus('{{ $order->id }}','confirm')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm transition-colors flex items-center gap-1">
+                        <span class="material-icons text-sm">check_circle</span> Konfirmasi
                       </button>
-                    </form>
+                    @endif
+                    @if($order->status === 'confirmed')
+                      <button onclick="updateOrderStatus('{{ $order->id }}','process')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-lg text-sm transition-colors flex items-center gap-1">
+                        <span class="material-icons text-sm">restaurant</span> Proses
+                      </button>
+                    @endif
+                    @if($order->status === 'processed')
+                      <button onclick="updateOrderStatus('{{ $order->id }}','deliver')" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-lg text-sm transition-colors flex items-center gap-1">
+                        <span class="material-icons text-sm">local_shipping</span> Kirim
+                      </button>
+                    @endif
+                    @if($order->status === 'delivered')
+                      <button onclick="updateOrderStatus('{{ $order->id }}','complete')" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm transition-colors flex items-center gap-1">
+                        <span class="material-icons text-sm">done_all</span> Selesai
+                      </button>
+                    @endif
                   </td>
                 </tr>
               @empty
                 <tr>
                   <td colspan="6" class="px-6 py-8 text-center text-gray-500 transition-colors duration-500">
                     <div class="flex flex-col items-center justify-center">
-                      <span class="material-icons text-4xl text-gray-400 mb-2">restaurant</span>
-                      <p class="text-lg">Belum ada data menu</p>
-                      <p class="text-sm text-gray-400 mt-1 transition-colors duration-500">Menu akan muncul di sini setelah ditambahkan</p>
+                      <span class="material-icons text-4xl text-gray-400 mb-2">receipt</span>
+                      <p class="text-lg">Belum ada pesanan</p>
+                      <p class="text-sm text-gray-400 mt-1">Pesanan akan muncul di sini ketika ada yang memesan</p>
                     </div>
                   </td>
                 </tr>
@@ -307,8 +339,9 @@
 
         <!-- Pagination -->
         <div class="mt-6">
-          {{ $menus->links() }}
+          {{ $orders->links() }}
         </div>
+
       </div>
     </main>
   </div>
@@ -428,6 +461,29 @@
       toggle.textContent = "🌙";
       localStorage.theme = "light";
     }
+
+    function updateOrderStatus(orderId, action) {
+      if(!confirm('Apakah Anda yakin ingin melakukan "'+action+'" untuk pesanan ini?')) return;
+      fetch(`/admin/orders/${orderId}/${action}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json'
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          alert('✅ ' + data.message);
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          alert('❌ ' + data.message);
+        }
+      })
+      .catch(err => { console.error(err); alert('❌ Terjadi kesalahan'); });
+    }
   </script>
+
 </body>
 </html>

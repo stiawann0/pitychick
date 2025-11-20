@@ -1,104 +1,428 @@
-@extends('layouts.admin')
+<!DOCTYPE html>
+<html lang="id" class="bg-gray-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Pelanggan | Pity Chick</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    
+    /* Dark Mode Styles - HANYA untuk main content */
+    .dark-mode main { 
+      background-color: #1f2937 !important; 
+      color: #e5e7eb !important; 
+    }
+    .dark-mode table { 
+      background-color: #1f2937; 
+      color: #f3f4f6; 
+    }
+    .dark-mode th { 
+      background-color: #374151 !important; 
+    }
+    .dark-mode td { 
+      background-color: #1f2937 !important; 
+      border-color: #4b5563 !important; 
+    }
+    .dark-mode tr:hover td { 
+      background-color: #374151 !important; 
+    }
+    .dark-mode .shadow-md { 
+      box-shadow: none !important; 
+      border-color: #4b5563 !important; 
+    }
+    
+    /* Sidebar TETAP SAMA di semua mode - tidak berubah */
+    aside {
+      background: linear-gradient(180deg, #7f1d1d 0%, #991b1b 100%) !important;
+    }
+    .sidebar-header {
+      background: linear-gradient(180deg, #991b1b 0%, #b91c1c 100%) !important;
+    }
 
-@section('title', 'Daftar Pelanggan')
-@section('header-title', 'Manajemen Pelanggan')
+    /* Header dark mode */
+    .dark-mode header {
+      background-color: #1f2937 !important;
+      border-color: #374151 !important;
+    }
+    .dark-mode header h1 {
+      color: #ffffff !important;
+    }
+    .dark-mode header p {
+      color: #d1d5db !important;
+    }
+    .dark-mode header button {
+      color: #ef4444 !important;
+    }
+    .dark-mode header .material-icons {
+      color: #d1d5db !important;
+    }
+    .dark-mode header .material-icons:hover {
+      color: #ef4444 !important;
+    }
 
-@section('content')
-    <div class="bg-white shadow-sm rounded-lg mb-6">
-        <div class="p-6 flex justify-between items-center border-b">
-            <h3 class="text-lg font-semibold">Daftar Pelanggan</h3>
-            <a href="{{ route('admin.users.create') }}"
-               class="bg-yellow-600 hover:bg-yellow-700 text-black px-4 py-2 rounded flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2"
-                     viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                </svg>
-                Tambah Pelanggan
-            </a>
+    /* Notifikasi dark mode */
+    .dark-mode .bg-green-100 {
+      background-color: #064e3b !important;
+      border-color: #047857 !important;
+      color: #d1fae5 !important;
+    }
+    .dark-mode .bg-red-100 {
+      background-color: #7f1d1d !important;
+      border-color: #b91c1c !important;
+      color: #fecaca !important;
+    }
+    
+    /* Dark mode untuk white elements */
+    .dark-mode .bg-white {
+      background-color: #374151 !important;
+    }
+    .dark-mode .text-gray-500 {
+      color: #9ca3af !important;
+    }
+    .dark-mode .text-gray-400 {
+      color: #6b7280 !important;
+    }
+    .dark-mode .text-gray-800 {
+      color: #f9fafb !important;
+    }
+    .dark-mode .border-gray-200 {
+      border-color: #4b5563 !important;
+    }
+    
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+      .p-4 {
+        padding: 0.75rem !important;
+      }
+      .p-8 {
+        padding: 1rem !important;
+      }
+      .text-lg {
+        font-size: 1rem !important;
+      }
+      .text-xl {
+        font-size: 1.125rem !important;
+      }
+      .px-6 {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+      }
+      .py-4 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+      }
+    }
+  </style>
+</head>
+
+<body id="appBody" class="bg-gray-100 text-gray-800 transition-colors duration-500">
+  <div class="flex flex-col md:flex-row h-screen">
+
+    <!-- Sidebar - TETAP SAMA di semua mode seperti dashboard -->
+    <aside id="sidebar" class="w-1/2 md:w-64 bg-red-900 text-white flex flex-col transition-transform duration-500 fixed md:relative md:translate-x-0 -translate-x-full h-full z-40 rounded-r-2xl shadow-2xl">
+      <div class="p-6 text-center border-b border-red-800 bg-[url('https://www.transparenttextures.com/patterns/checkered-light-emboss.png')] sidebar-header">
+        <div class="flex items-center justify-center gap-3">
+          <img 
+            src="{{ asset('images/pity.png') }}" 
+            alt="Logo Pity Chick" 
+            class="w-12 h-12 md:w-14 md:h-14 object-contain" 
+          >
+          <h1 class="text-xl md:text-2xl font-bold tracking-wide">Pity Chick</h1>
         </div>
+      </div>
+      
+      <!-- User Info -->
+<div class="p-4 border-b border-red-800">
+  <div class="flex items-center gap-3">
+    <!-- Avatar dengan inisial -->
+    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-800 border-2 border-white flex items-center justify-center">
+      <span class="text-white font-bold text-sm">
+        {{ substr(auth()->user()->name, 0, 1) }}
+      </span>
     </div>
-
-    @if(session('success'))
-        <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($users as $user)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $user->email }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $user->phone }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-2">
-
-                                    <!-- Tombol Show -->
-                                    <a href="{{ route('admin.users.show', $user) }}" class="text-blue-600 hover:text-blue-900" title="Detail Pelanggan">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                        </svg>
-                                    </a>
-                                <div class="px-1"></div> 
-
-                                    <!-- Tombol Edit -->
-                                    <a   a href="{{ route('admin.users.edit', $user) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit Pelanggan">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
-                                    </a>
-                                <div class="px-1"></div> 
-
-                                <!-- Tombol Delete -->
-                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pelanggan ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus Pelanggan">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                Tidak ada pelanggan
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4">
-            {{ $users->links() }}
-        </div>
+    <div class="flex-1 min-w-0">
+      <p class="font-medium truncate">{{ auth()->user()->name }}</p>
+      <p class="text-xs text-red-200 truncate">{{ auth()->user()->email }}</p>
     </div>
-@endsection
+  </div>
+</div>
+
+      <!-- Navigasi -->
+      <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
+          <span class="material-icons">dashboard</span> Dashboard
+        </a>
+        <a href="{{ route('admin.orders.index') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
+          <span class="material-icons">receipt</span> Pesanan
+        </a>
+        <a href="{{ route('admin.menus.index') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
+          <span class="material-icons">restaurant</span> Menu
+        </a>
+        <a href="{{ route('admin.reservations.index') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
+          <span class="material-icons">calendar_today</span> Reservasi
+        </a>
+        <a href="{{ route('admin.users.index') }}" class="flex items-center gap-2 p-3 rounded-lg bg-red-800 hover:bg-red-700 transition">
+          <span class="material-icons">people</span> Pelanggan
+        </a>
+        <a href="{{ route('admin.settings.index') }}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-red-700 transition">
+          <span class="material-icons">settings</span> Pengaturan
+        </a>
+      </nav>
+
+      <!-- Logout Section -->
+      <div class="p-4 border-t border-red-800">
+        <form method="POST" action="{{ route('logout') }}" id="logoutForm">
+          @csrf
+          <button type="button" onclick="confirmLogout()" 
+                  class="flex items-center gap-2 w-full p-3 rounded-lg hover:bg-red-700 transition text-red-100">
+            <span class="material-icons">logout</span>
+            <span>Keluar</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="p-4 border-t border-red-800 text-center text-sm bg-red-900 bg-[url('https://www.transparenttextures.com/patterns/checkered-light-emboss.png')]">
+        <p class="text-white">&copy; 2025 Pity Chick 🍗</p>
+      </div>
+    </aside>
+
+    <!-- Overlay untuk mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-40 hidden z-30 md:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content - Berubah sesuai mode -->
+    <main id="mainContent" class="flex-1 overflow-y-auto bg-white transition-colors duration-500">
+      
+      <!-- Header dengan tombol toggle sidebar mobile -->
+      <header class="flex justify-between items-center px-4 md:px-6 py-4 border-b bg-white border-gray-200 transition-colors duration-500">
+        <div class="flex items-center gap-3">
+          <!-- Tombol toggle sidebar mobile -->
+          <button id="menuButton" class="md:hidden text-red-700 transition-colors duration-500" onclick="toggleSidebar()">
+            <span class="material-icons text-2xl md:text-3xl">menu</span>
+          </button>
+          <div>
+            <h1 class="text-lg md:text-xl font-bold text-red-700 transition-colors duration-500">Daftar Pelanggan</h1>
+            <p class="text-gray-500 text-xs md:text-sm transition-colors duration-500">Kelola data semua pelanggan</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="p-4 md:p-6">
+
+        <!-- Notifikasi -->
+        @if(session('success'))
+          <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 md:mb-6 rounded transition-colors duration-500">
+            <div class="flex items-center">
+              <span class="material-icons text-green-500 mr-2">check_circle</span>
+              {{ session('success') }}
+            </div>
+          </div>
+        @endif
+        
+        @if(session('error'))
+          <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 md:mb-6 rounded transition-colors duration-500">
+            <div class="flex items-center">
+              <span class="material-icons text-red-500 mr-2">error</span>
+              {{ session('error') }}
+            </div>
+          </div>
+        @endif
+
+        <!-- Tabel Pelanggan -->
+        <div class="overflow-x-auto bg-white shadow-md rounded-xl border border-gray-200 transition-colors duration-500">
+          <table class="w-full text-sm text-left border-collapse">
+            <thead class="bg-red-700 text-white uppercase text-xs">
+              <tr>
+                <th class="px-4 md:px-6 py-3 text-center">No</th>
+                <th class="px-4 md:px-6 py-3">Nama</th>
+                <th class="px-4 md:px-6 py-3">Email</th>
+                <th class="px-4 md:px-6 py-3">Telepon</th>
+                <th class="px-4 md:px-6 py-3">Tanggal Bergabung</th>
+                <!-- KOLOM AKSI DIHAPUS -->
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($users as $index => $user)
+                <tr class="border-b border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-500">
+                  <td class="px-4 md:px-6 py-4 text-center">{{ $index + 1 }}</td>
+                  <td class="px-4 md:px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-red-600 text-sm">person</span>
+                      </div>
+                      <div>
+                        <div class="font-medium">{{ $user->name }}</div>
+                        <div class="text-xs text-gray-500 transition-colors duration-500">ID: {{ $user->id }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-4 md:px-6 py-4">
+                    <div class="font-medium">{{ $user->email }}</div>
+                    <div class="text-xs text-gray-500 transition-colors duration-500">
+                      @if($user->email_verified_at)
+                        <span class="text-green-600">Terverifikasi</span>
+                      @else
+                        <span class="text-yellow-600">Belum verifikasi</span>
+                      @endif
+                    </div>
+                  </td>
+                  <td class="px-4 md:px-6 py-4">
+                    @if($user->phone)
+                      <div class="font-medium">{{ $user->phone }}</div>
+                    @else
+                      <span class="text-gray-400 italic transition-colors duration-500">-</span>
+                    @endif
+                  </td>
+                  <td class="px-4 md:px-6 py-4">
+                    <div class="font-medium">{{ $user->created_at->format('d-m-Y') }}</div>
+                    <div class="text-xs text-gray-500 transition-colors duration-500">{{ $user->created_at->format('H:i') }}</div>
+                  </td>
+                  <!-- SEL AKSI DIHAPUS -->
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="5" class="px-4 md:px-6 py-8 text-center text-gray-500 transition-colors duration-500">
+                    <div class="flex flex-col items-center justify-center">
+                      <span class="material-icons text-4xl text-gray-400 mb-2">people</span>
+                      <p class="text-lg">Belum ada pelanggan</p>
+                      <p class="text-sm text-gray-400 mt-1 transition-colors duration-500">Data pelanggan akan muncul di sini</p>
+                    </div>
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4 md:mt-6">
+          {{ $users->links() }}
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Tombol Dark Mode -->
+  <button id="darkModeToggle" class="fixed bottom-6 right-6 bg-red-700 text-white p-3 rounded-full shadow-lg hover:bg-red-800 transition z-50">
+    🌙
+  </button>
+
+  <!-- Logout Confirmation Modal -->
+  <div id="logoutModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-2xl p-4 md:p-6 max-w-sm mx-4 transition-colors duration-500 shadow-2xl">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-xl flex items-center justify-center">
+          <span class="material-icons text-red-600">logout</span>
+        </div>
+        <h3 class="text-base md:text-lg font-semibold text-gray-800 transition-colors duration-500">Konfirmasi Keluar</h3>
+      </div>
+      <p class="text-gray-600 mb-4 md:mb-6 transition-colors duration-500 text-sm md:text-base">Apakah Anda yakin ingin keluar dari sistem?</p>
+      <div class="flex gap-2 md:gap-3 justify-end">
+        <button type="button" onclick="hideLogoutModal()" 
+                class="px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-300 font-medium text-sm md:text-base">
+          Batal
+        </button>
+        <button type="button" onclick="performLogout()" 
+                class="px-3 md:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-300 font-medium text-sm md:text-base">
+          Ya, Keluar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sidebar Toggle Functions
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const isHidden = sidebar.classList.contains('-translate-x-full');
+
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    const sidebar = document.getElementById('sidebar');
+
+    sidebar.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    });
+
+    sidebar.addEventListener('touchmove', (e) => {
+      touchEndX = e.touches[0].clientX;
+    });
+
+    sidebar.addEventListener('touchend', () => {
+      const swipeDistance = touchEndX - touchStartX;
+
+      // Jika geser ke kanan lebih dari 50px, tutup sidebar
+      if (swipeDistance > 50) {
+        sidebar.classList.add('-translate-x-full');
+        document.getElementById('sidebarOverlay').classList.add('hidden');
+      }
+    });
+
+    // Logout Functions
+    function confirmLogout() {
+      document.getElementById('logoutModal').classList.remove('hidden');
+    }
+
+    function hideLogoutModal() {
+      document.getElementById('logoutModal').classList.add('hidden');
+    }
+
+    function performLogout() {
+      document.getElementById('logoutForm').submit();
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('logoutModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideLogoutModal();
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        hideLogoutModal();
+      }
+    });
+
+    // Dark Mode Toggle - HANYA mempengaruhi main content
+    const toggle = document.getElementById('darkModeToggle');
+    const body = document.getElementById('appBody');
+    const main = document.getElementById('mainContent');
+
+    if (localStorage.theme === 'dark') enableDark();
+
+    toggle.addEventListener('click', () => {
+      body.classList.contains('dark-mode') ? disableDark() : enableDark();
+    });
+
+    function enableDark() {
+      body.classList.add("dark-mode");
+      body.classList.replace("bg-gray-100", "bg-gray-900");
+      main.classList.replace("bg-white", "bg-gray-800");
+      toggle.textContent = "☀️";
+      localStorage.theme = "dark";
+    }
+
+    function disableDark() {
+      body.classList.remove("dark-mode");
+      body.classList.replace("bg-gray-900", "bg-gray-100");
+      main.classList.replace("bg-gray-800", "bg-white");
+      toggle.textContent = "🌙";
+      localStorage.theme = "light";
+    }
+  </script>
+</body>
+</html>

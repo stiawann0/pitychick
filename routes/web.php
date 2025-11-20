@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ReservationController;
 use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\OrderController; // 🔥 PASTIKAN IMPORT INI
 use App\Http\Controllers\Admin\Settings\HomeSettingsController;
 use App\Http\Controllers\Admin\Settings\AboutSettingsController;
 use App\Http\Controllers\Admin\Settings\ReviewSettingsController;
@@ -37,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard umum
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    
+
     // ========================
     // ✅ ADMIN PANEL - FIXED STRUCTURE
     // ========================
@@ -44,6 +47,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Dashboard - accessible by all authenticated admin users
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // 🔥 PERBAIKI: ROUTE CHART DENGAN NAMA YANG BENAR
+        Route::get('/dashboard/orders-chart', [DashboardController::class, 'getOrderChartData'])
+            ->name('dashboard.ordersChart'); // 🔥 NAMA ROUTE YANG BENAR
+        
+        Route::get('/dashboard/reservations-chart', [DashboardController::class, 'getReservationChartData'])
+            ->name('dashboard.reservationsChart'); // 🔥 NAMA ROUTE YANG BENAR
+
+        // 🔥 UPDATE ROUTE UNTUK ORDERS - TAMBAH ROUTE BARU
+        Route::middleware('can:manage-orders')->group(function () {
+            Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+            Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+            Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+            
+            // 🔥 ROUTES BARU UNTUK QUICK ACTIONS
+            Route::post('/orders/{order}/confirm', [OrderController::class, 'confirm'])->name('orders.confirm');
+            Route::post('/orders/{order}/process', [OrderController::class, 'process'])->name('orders.process');
+            Route::post('/orders/{order}/deliver', [OrderController::class, 'deliver'])->name('orders.deliver');
+            Route::post('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
+            Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+        });
 
         // ✅ RESERVATIONS - dengan permission spesifik
         Route::middleware('can:manage-reservations')->group(function () {
@@ -67,6 +91,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ✅ USERS - dengan permission spesifik
         Route::middleware('can:manage-users')->group(function () {
             Route::resource('users', UserController::class);
+        });
+
+        // Dalam group admin orders
+        Route::middleware('can:manage-orders')->group(function () {
+            Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+            Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+            Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+            
+            // Quick Actions - PERBAIKI ROUTE UNTUK JAVASCRIPT
+            Route::post('/orders/{order}/confirm', [OrderController::class, 'confirm'])->name('orders.confirm');
+            Route::post('/orders/{order}/process', [OrderController::class, 'process'])->name('orders.process');
+            Route::post('/orders/{order}/deliver', [OrderController::class, 'deliver'])->name('orders.deliver');
+            Route::post('/orders/{order}/complete', [OrderController::class, 'complete'])->name('orders.complete');
+            
+            // 🔥 ROUTE BARU UNTUK JAVASCRIPT ACTION
+            Route::post('/orders/{order}/{action}', [OrderController::class, 'updateStatus'])->name('orders.action');
+            
+            // COD Payment
+            Route::post('/orders/{order}/complete-cod-payment', [OrderController::class, 'completeCodPayment'])->name('orders.complete-cod-payment');
+            Route::post('/orders/{order}/mark-as-paid', [OrderController::class, 'markAsPaid'])->name('orders.mark-as-paid');
+            
+            // Unpaid COD
+            Route::get('/orders/unpaid-cod', [OrderController::class, 'getDeliveredUnpaidCOD'])->name('orders.unpaid-cod');
         });
 
         // ✅ SETTINGS - dengan permission spesifik
